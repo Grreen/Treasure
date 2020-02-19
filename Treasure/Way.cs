@@ -9,7 +9,7 @@ namespace Treasure
     {
         public static bool SearchWay(Point start, Point finish, int[,] map, ref List<Point> way)
         {
-            if (start == finish) return false;
+            if (start == finish) return true;
 
             int ax = start.X, ay = start.Y,
                 bx = finish.X, by = finish.Y;
