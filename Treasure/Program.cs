@@ -8,7 +8,7 @@ namespace Treasure
     {
         static void Main(string[] args)
         { 
-            const string NameMap = "C:/Users/kiril/Desktop/dotnet.course/Task1/TestData/Map6.txt";
+            const string NameMap = "";
             Map mapa = new Map(NameMap);
             mapa.PrintMap();
             Console.ReadKey();

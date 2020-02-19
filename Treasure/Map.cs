@@ -50,6 +50,8 @@ namespace Treasure
                 LinesParsing();
                 CreateMap();
                 AddWay();
+
+                Console.SetWindowSize(widthMap+1, heightMap+1);
             }
             catch (Exception exp)
             {
@@ -319,28 +321,31 @@ namespace Treasure
                 start.Add(new Point(Base[0].X + (Base[1].X - Base[0].X) / 2 + 2, Base[1].Y + 2));
             }
 
-            foreach (Point finish in Treasure)
+            /*            foreach (Point finish in Treasure)
+                        {*/
+            var rand = new Random();
+            Point finish = Treasure[rand.Next(0, Treasure.Count())];
+
+            foreach (Point el in start)
             {
-                foreach (Point el in start)
+                if (way.Count() == 0)
+                    Way.SearchWay(el, new Point(finish.X + 1, finish.Y + 1), map, ref way);
+                else
                 {
-                    if (way.Count() == 0)
-                        Way.SearchWay(el, new Point(finish.X + 1, finish.Y + 1), map, ref way);
-                    else
+                    List<Point> _way = new List<Point>();
+                    Way.SearchWay(el, new Point(finish.X + 1, finish.Y + 1), map, ref _way);
+                    if (_way.Count() < way.Count())
+                        way = _way;
+                    else if (_way.Count() == way.Count())
                     {
-                        List<Point> _way = new List<Point>();
-                        Way.SearchWay(el, new Point(finish.X + 1, finish.Y + 1), map, ref _way);
-                        if (_way.Count() < way.Count())
+                        //var rand = new Random();
+                        if (rand.Next(0, 2) == 1)
                             way = _way;
-                        else if (_way.Count() == way.Count())
-                        {
-                            var rand = new Random();
-                            if (rand.Next(0, 2) == 1)
-                                way = _way;
-                        }
                     }
                 }
-                all_way.Add(way);
             }
+            all_way.Add(way);
+//            }
             if (way.Count() == 0)
                 throw new Exception("Failed to build route");
             foreach (List<Point> w in all_way)
