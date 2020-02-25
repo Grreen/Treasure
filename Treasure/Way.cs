@@ -7,93 +7,139 @@ namespace Treasure
 {
     class Way
     {
-        public static bool SearchWay(Point start, Point finish, int[,] map, ref List<Point> way)
+        struct Node
         {
-            if (start == finish) return true;
-
-            int ax = start.X, ay = start.Y,
-                bx = finish.X, by = finish.Y;
-
-            int W = map.GetLength(0);
-            int H = map.GetLength(1);
-
-            const int WALL = -1;
-            const int BLANK = -2;
-
-            int[] px = new int[W * H];
-            int[] py = new int[W * H];
-            for (int j = 0; j < W * H; j++)
+            public int x, y, 
+                       parentX, parentY, 
+                       gCost, hCost, fCost;
+            public Node(int X, int Y, int ParentX, int ParentY, int GCost, int HCost)
             {
-                px[j] = py[j] = 0;
+                this.x = X;
+                this.y = Y;
+                this.parentX = ParentX;
+                this.parentY = ParentY;
+                this.gCost = GCost;
+                this.hCost = HCost;
+                this.fCost = GCost + HCost;
             }
-            int len;
-            int[,] grid = new int[W, H];
+        }
+        public static void SearchWay(int[,] Map, ref List<Point> Way, Point start, Point Treasure)
+        {
+            int W = Map.GetLength(0);
+            int H = Map.GetLength(1);
 
-            for (int i = 0; i < W; i++)
-                for (int j = 0; j < H; j++)
-                    if (map[i, j] == 1 || map[i, j] == 3 || map[i, j] == 4 || map[i, j] == 2)
-                        grid[i, j] = BLANK;
-                    else grid[i, j] = WALL;
+            int[,] WhereWeCan = new int[W, H];
 
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                    if (Map[x, y] == 1 || Map[x, y] == 3)
+                        WhereWeCan[x, y] = 0;
+                    else
+                        WhereWeCan[x, y] = 1;
 
-            int[] dy = { 1, 0, -1, 0 }; 
-            int[] dx = { 0, 1, 0, -1 };   
-            int d, x, y, k;
-            bool stop;
+            List<Node> ActivNode = new List<Node>();
+            List<Node> DisActivNode = new List<Node>();
+            Node Start = new Node(start.X, start.Y, -1, -1, 0, Math.Abs(Treasure.X - start.X) + Math.Abs(Treasure.Y - start.Y));
+            ActivNode.Add(Start);
+            Node MinNode;
 
-            if (grid[ax,ay] == WALL || grid[bx,by] == WALL) return false;  
-
-            d = 0;
-            grid[ax,ay] = 0;          
-            do 
+            while (ActivNode.Count != 0)
             {
-                stop = true;           
-                for (x = 0; x<W; x++ )
-                  for (y = 0; y<H; y++ )
-                    if (grid[x,y] == d )                
-                    {
-                        for (k = 0; k< 4; ++k )                 
-                        {
-                            int iy = y + dy[k], ix = x + dx[k];
-                            if (iy >= 0 && iy<H && ix >= 0 && ix<W && grid[ix,iy] == BLANK)
-                            {
-                                stop = false;            
-                                grid[ix,iy] = d + 1;     
-                            }
-                      }
-                    }
-                d++;
-            } while ( !stop && grid[bx,by] == BLANK);
-
-            if (grid[bx,by] == BLANK) return false; 
-
-            len = grid[bx,by]+1;            
-            x = bx;
-            y = by;
-            d = len;
-            while (d > 0 )
-            {
-                px[d] = x;
-                py[d] = y;                  
-                d--;
-                for (k = 0; k< 4; ++k)
+                MinNode = ActivNode[0];
+                foreach (Node node in ActivNode)
                 {
-                    int iy = y + dy[k], ix = x + dx[k];
-                    if (iy >= 0 && iy<H && ix >= 0 && ix<W && grid[ix,iy] == d)
+                    if (MinNode.fCost > node.fCost)
                     {
-                        x = x + dx[k];
-                        y = y + dy[k];           
+                        MinNode = node;
+                    }
+                }
+                if ((MinNode.x + 1 == Treasure.X && MinNode.y == Treasure.Y) ||
+                    (MinNode.x - 1 == Treasure.X && MinNode.y == Treasure.Y) ||
+                    (MinNode.x == Treasure.X && MinNode.y + 1 == Treasure.Y) ||
+                    (MinNode.x == Treasure.X && MinNode.y - 1 == Treasure.Y))
+                {
+                    ActivNode.Remove(MinNode);
+                    DisActivNode.Add(MinNode);
+                    Way = BuildWay(DisActivNode, MinNode);
+                    return;
+                }
+                
+
+                if (MinNode.x + 1 < W && WhereWeCan[MinNode.x + 1, MinNode.y] == 0)
+                {
+                    Node NewNode = new Node(MinNode.x + 1, MinNode.y, MinNode.x, MinNode.y, MinNode.gCost + 1, Math.Abs(Treasure.X - MinNode.x + 1) + Math.Abs(Treasure.Y - MinNode.y));
+                    bool Search = GetSearch(ActivNode, DisActivNode, NewNode);
+
+                    if (Search == false)
+                        ActivNode.Add(NewNode);
+                }
+                if (MinNode.x - 1 > 0 && WhereWeCan[MinNode.x - 1, MinNode.y] == 0)
+                {
+                    Node NewNode = new Node(MinNode.x - 1, MinNode.y, MinNode.x, MinNode.y, MinNode.gCost + 1, Math.Abs(Treasure.X - MinNode.x - 1) + Math.Abs(Treasure.Y - MinNode.y));
+                    bool Search = GetSearch(ActivNode, DisActivNode, NewNode);
+
+                    if (Search == false)
+                        ActivNode.Add(NewNode);
+                }
+                if (MinNode.y + 1 < H && WhereWeCan[MinNode.x, MinNode.y + 1] == 0)
+                {
+                    Node NewNode = new Node(MinNode.x, MinNode.y + 1, MinNode.x, MinNode.y, MinNode.gCost + 1, Math.Abs(Treasure.X - MinNode.x) + Math.Abs(Treasure.Y - MinNode.y + 1));
+                    bool Search = GetSearch(ActivNode, DisActivNode, NewNode);
+
+                    if (Search == false)
+                        ActivNode.Add(NewNode);
+                }
+                if (MinNode.y - 1 > 0 && WhereWeCan[MinNode.x, MinNode.y - 1] == 0)
+                {
+                    Node NewNode = new Node(MinNode.x, MinNode.y - 1, MinNode.x, MinNode.y, MinNode.gCost + 1, Math.Abs(Treasure.X - MinNode.x) + Math.Abs(Treasure.Y - MinNode.y - 1));
+                    bool Search = GetSearch(ActivNode, DisActivNode, NewNode);
+
+                    if (Search == false)
+                        ActivNode.Add(NewNode);
+                }
+
+                ActivNode.Remove(MinNode);
+                DisActivNode.Add(MinNode);
+            }
+        }
+        private static bool GetSearch(List<Node> ActivNode, List<Node> DisActivNode, Node NewNode)
+        {
+            bool Search = false;
+            foreach (Node node in ActivNode)
+            {
+                if (node.x == NewNode.x && node.y == NewNode.y)
+                {
+                    Search = true;
+                    break;
+                }
+            }
+            foreach (Node node in DisActivNode)
+            {
+                if (node.x == NewNode.x && node.y == NewNode.y)
+                {
+                    Search = true;
+                    break;
+                }
+            }
+            return Search;
+        }
+        private static List<Point> BuildWay(List<Node> DisActivNode, Node MinNode)
+        {
+            List<Point> Way = new List<Point>();
+            while (MinNode.parentX != -1 && MinNode.parentY != -1)
+            {
+                Point way = new Point(MinNode.x, MinNode.y);
+                foreach (Node node in DisActivNode)
+                {
+                    if (node.x == MinNode.parentX && node.y == MinNode.parentY)
+                    {
+                        MinNode = node;
+                        Way.Add(way);
                         break;
                     }
                 }
             }
-            px[0] = ax;
-            py[0] = ay;                    
-
-            for (int i=0;i<len;i++)
-                way.Add(new Point(px[i], py[i]));
-
-            return true;
+            return Way;
         }
     }
 }
