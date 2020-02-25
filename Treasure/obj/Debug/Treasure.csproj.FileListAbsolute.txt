@@ -4,3 +4,9 @@ C:\Users\kiril\source\repos\Treasure\Treasure\bin\Debug\Treasure.pdb
 C:\Users\kiril\source\repos\Treasure\Treasure\obj\Debug\Treasure.csprojAssemblyReference.cache
 C:\Users\kiril\source\repos\Treasure\Treasure\obj\Debug\Treasure.exe
 C:\Users\kiril\source\repos\Treasure\Treasure\obj\Debug\Treasure.pdb
+C:\Users\kiril\Desktop\Treasure-m\Treasure\bin\Debug\Treasure.exe.config
+C:\Users\kiril\Desktop\Treasure-m\Treasure\bin\Debug\Treasure.exe
+C:\Users\kiril\Desktop\Treasure-m\Treasure\bin\Debug\Treasure.pdb
+C:\Users\kiril\Desktop\Treasure-m\Treasure\obj\Debug\Treasure.csprojAssemblyReference.cache
+C:\Users\kiril\Desktop\Treasure-m\Treasure\obj\Debug\Treasure.exe
+C:\Users\kiril\Desktop\Treasure-m\Treasure\obj\Debug\Treasure.pdb

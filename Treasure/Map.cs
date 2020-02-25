@@ -122,16 +122,21 @@ namespace Treasure
                 }
             }
 
-            widthMap ++;
-            heightMap ++;
+            widthMap++;
+            heightMap++;
+
+            CheckBorderWater();
+
             map = new int[widthMap, heightMap];
             for (int x = 0; x < widthMap; x++)
                 for (int y = 0; y < heightMap; y++)
-                    map[x,y] = WALL; 
+                    map[x,y] = WALL;
         }
 
         private void CreateMap()
         {
+            AddBorder();
+
             foreach (List<Point> wat in Water)
                 for (int i = 1; i < wat.Count(); i++)
                     CreateWater(wat[i - 1], wat[i]);
@@ -146,8 +151,6 @@ namespace Treasure
 
             foreach (Point treas in Treasure)
                 map[treas.X, treas.Y] = TREASURE;
-
-            AddBorder();
 
         }
 
@@ -170,6 +173,19 @@ namespace Treasure
                         newMap[x, y] = map[x - 1, y - 1];
                 }
             map = newMap;
+
+            for (int i = 0; i < Base.Count(); i++)
+                Base[i] = new Point(Base[i].X + 1, Base[i].Y + 1);
+
+            for (int i = 0; i < Bridge.Count(); i++)
+                Bridge[i] = new Point(Bridge[i].X + 1, Bridge[i].Y + 1);
+
+            for (int i = 0; i < Treasure.Count(); i++)
+                Treasure[i] = new Point(Treasure[i].X + 1, Treasure[i].Y + 1);
+
+            for (int i = 0; i < Water.Count(); i++)
+                for (int j = 0; j < Water[i].Count(); j++)
+                    Water[i][j] = new Point(Water[i][j].X + 1, Water[i][j].Y + 1);
         }
 
         private void CreateWater(Point start, Point end)
@@ -297,28 +313,28 @@ namespace Treasure
 
             if ((Base[0].Y - Base[1].Y) % 2 == 0)
             {
-                start.Add(new Point(Base[0].X, Base[0].Y + (Base[1].Y - Base[0].Y) / 2 + 1));
-                start.Add(new Point(Base[1].X + 2, Base[0].Y + (Base[1].Y - Base[0].Y) / 2 + 1));
+                start.Add(new Point(Base[0].X, Base[0].Y + (Base[1].Y - Base[0].Y) / 2));
+                start.Add(new Point(Base[1].X, Base[0].Y + (Base[1].Y - Base[0].Y) / 2));
             }
             else
             {
+                start.Add(new Point(Base[0].X, Base[0].Y + (Base[1].Y - Base[0].Y) / 2));
                 start.Add(new Point(Base[0].X, Base[0].Y + (Base[1].Y - Base[0].Y) / 2 + 1));
-                start.Add(new Point(Base[0].X, Base[0].Y + (Base[1].Y - Base[0].Y) / 2 + 2));
-                start.Add(new Point(Base[1].X + 2, Base[0].Y + (Base[1].Y - Base[0].Y) / 2 + 1));
-                start.Add(new Point(Base[1].X + 2, Base[0].Y + (Base[1].Y - Base[0].Y) / 2 + 2));
+                start.Add(new Point(Base[1].X, Base[0].Y + (Base[1].Y - Base[0].Y) / 2));
+                start.Add(new Point(Base[1].X , Base[0].Y + (Base[1].Y - Base[0].Y) / 2 + 1));
             }
 
             if ((Base[0].X - Base[1].X) % 2 == 0)
             {
-                start.Add(new Point(Base[0].X + (Base[1].X - Base[0].X) / 2 + 1, Base[0].Y));
-                start.Add(new Point(Base[0].X + (Base[1].X - Base[0].X) / 2 + 1, Base[1].Y+2));
+                start.Add(new Point(Base[0].X + (Base[1].X - Base[0].X) / 2 , Base[0].Y));
+                start.Add(new Point(Base[0].X + (Base[1].X - Base[0].X) / 2 , Base[1].Y));
             }
             else
             {
+                start.Add(new Point(Base[0].X + (Base[1].X - Base[0].X) / 2, Base[0].Y));
                 start.Add(new Point(Base[0].X + (Base[1].X - Base[0].X) / 2 + 1, Base[0].Y));
-                start.Add(new Point(Base[0].X + (Base[1].X - Base[0].X) / 2 + 2, Base[0].Y));
-                start.Add(new Point(Base[0].X + (Base[1].X - Base[0].X) / 2 + 1, Base[1].Y + 2));
-                start.Add(new Point(Base[0].X + (Base[1].X - Base[0].X) / 2 + 2, Base[1].Y + 2));
+                start.Add(new Point(Base[0].X + (Base[1].X - Base[0].X) / 2, Base[1].Y));
+                start.Add(new Point(Base[0].X + (Base[1].X - Base[0].X) / 2 + 1, Base[1].Y));
             }
 
             /*            foreach (Point finish in Treasure)
@@ -329,11 +345,11 @@ namespace Treasure
             foreach (Point el in start)
             {
                 if (way.Count() == 0)
-                    Way.SearchWay(el, new Point(finish.X + 1, finish.Y + 1), map, ref way);
+                    Way.SearchWay(map, ref way, el, finish);
                 else
                 {
                     List<Point> _way = new List<Point>();
-                    Way.SearchWay(el, new Point(finish.X + 1, finish.Y + 1), map, ref _way);
+                    Way.SearchWay(map, ref _way, el, finish);
                     if (_way.Count() < way.Count())
                         way = _way;
                     else if (_way.Count() == way.Count())
@@ -352,6 +368,72 @@ namespace Treasure
                 foreach (Point p in w)
                     if (map[p.X, p.Y] == WALL || map[p.X, p.Y] == BASE)
                         map[p.X, p.Y] = WAY;
+        }
+
+        private void CheckBorderWater()
+        {
+            int x1, x2, x3;
+            int y1, y2, y3;
+
+            for (int i = 0; i < Water.Count(); i++)
+                for (int j = 1; j < Water[i].Count() - 1; j++)
+                {
+                    x1 = Water[i][j - 1].X;
+                    y1 = Water[i][j - 1].Y;
+                    x2 = Water[i][j].X;
+                    y2 = Water[i][j].Y;
+                    x3 = Water[i][j + 1].X;
+                    y3 = Water[i][j + 1].Y;
+
+                    if ((x1 < x2) && (x2 > x1) && (x2 == widthMap - 1)
+                        && (Water[i].First().X != widthMap - 1) 
+                        && (Water[i].Last().X != widthMap -1))
+                    {
+                        widthMap++;
+                    }
+                    if ((x1 > x2) && (x2 < x1) && (x2 == 0)
+                        && (Water[i].First().X != 0)
+                        && (Water[i].Last().X != 0))
+                    {
+                        for (int k = 0; k < Base.Count(); k++)
+                            Base[k] = new Point(Base[k].X + 1, Base[k].Y);
+
+                        for (int k = 0; k < Bridge.Count(); k++)
+                            Bridge[k] = new Point(Bridge[k].X + 1, Bridge[k].Y);
+
+                        for (int k = 0; k < Treasure.Count(); k++)
+                            Treasure[k] = new Point(Treasure[k].X + 1, Treasure[k].Y);
+
+                        for (int k = 0; k < Water.Count(); k++)
+                            for (int l = 0; l < Water[k].Count(); l++)
+                                Water[k][l] = new Point(Water[k][l].X + 1, Water[k][l].Y);
+                        widthMap++;
+                    }
+
+                    if ((y1 < y2) && (y2 > y1) && (y2 == heightMap - 1)
+                        && (Water[i].First().Y != heightMap - 1)
+                        && (Water[i].Last().Y != heightMap - 1))
+                        heightMap++;
+
+                    if ((y1 > y2) && (y2 < y1) && (y2 == 0)
+                        && (Water[i].First().Y != 0)
+                        && (Water[i].Last().Y != 0))
+                    {
+                        for (int k = 0; k < Base.Count(); k++)
+                            Base[k] = new Point(Base[k].X, Base[k].Y + 1);
+
+                        for (int k = 0; k < Bridge.Count(); k++)
+                            Bridge[k] = new Point(Bridge[k].X, Bridge[k].Y + 1);
+
+                        for (int k = 0; k < Treasure.Count(); k++)
+                            Treasure[k] = new Point(Treasure[k].X, Treasure[k].Y + 1);
+
+                        for (int k = 0; k < Water.Count(); k++)
+                            for (int l = 0; l < Water[k].Count(); l++)
+                                Water[k][l] = new Point(Water[k][l].X, Water[k][l].Y + 1);
+                        heightMap++;
+                    }
+                }
         }
     }
 }
